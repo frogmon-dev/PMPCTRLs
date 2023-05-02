@@ -16,7 +16,7 @@
 const char*   MQTT_HOST       = "frogmon.synology.me";
 const int     MQTT_PORT       = 8359;
 const char*   MQTT_USERID     = "frogmon";
-const char*   MQTT_DEVICEID   = "Heltec03";
+const char*   MQTT_DEVICEID   = "Heltec01";
 const int     MQTT_RETRY_WAIT = 5000;
 const char*   MQTT_PUB        = "FARMs/Status/";
 const char*   MQTT_SUB        = "FARMs/Control/";

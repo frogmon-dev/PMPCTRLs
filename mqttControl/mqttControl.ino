@@ -130,6 +130,12 @@ void setup() {
   
   digitalWrite(WATER_PIN, LOW);  
 
+  int switchState = digitalRead(SWITCH_PIN);
+  if (switchState == 0){
+    digitalWrite(WATER_PIN, HIGH);
+  } else {
+    digitalWrite(WATER_PIN, LOW);
+  }
   Serial.begin(115200);
   setup_wifi();
   client.setServer(mqtt_server, 8359);
