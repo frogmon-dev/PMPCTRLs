@@ -4,8 +4,8 @@
 #include "config.h"
 
 // Update these with values suitable for your network.
-const char* ssid        = "frogmon";
-const char* password    = "1234567890";
+const char* ssid        = "와아파이SSID";
+const char* password    = "와이파이비번";
 const char* mqtt_server = "frogmon.synology.me";
 
 String mPubAddr = String(MQTT_PUB) + String(MQTT_USERID)+"/"+String(MQTT_DEVICEID);
@@ -130,12 +130,6 @@ void setup() {
   
   digitalWrite(WATER_PIN, LOW);  
 
-  int switchState = digitalRead(SWITCH_PIN);
-  if (switchState == 0){
-    digitalWrite(WATER_PIN, HIGH);
-  } else {
-    digitalWrite(WATER_PIN, LOW);
-  }
   Serial.begin(115200);
   setup_wifi();
   client.setServer(mqtt_server, 8359);
