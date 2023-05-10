@@ -4,9 +4,8 @@
 #include "config.h"
 
 // Update these with values suitable for your network.
-const char* ssid        = "와아파이SSID";
-const char* password    = "와이파이비번";
-const char* mqtt_server = "frogmon.synology.me";
+const char* ssid        = "frogmon";      //WIFI ID
+const char* password    = "1234567890";   //WIFI 비번
 
 String mPubAddr = String(MQTT_PUB) + String(MQTT_USERID)+"/"+String(MQTT_DEVICEID);
 String mSubAddr = String(MQTT_SUB) + String(MQTT_USERID)+"/"+String(MQTT_DEVICEID);
@@ -88,6 +87,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
         } else {
           Serial.println("Invalid pump status");
         }
+      } else if (doc.containsKey("status")) {
+        int numStatus = doc["status"];
+        if (numStatus == 1) {
+          Serial.println("Status request");
+          client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
+        }
       }
     }
   } else {
@@ -132,7 +137,7 @@ void setup() {
 
   Serial.begin(115200);
   setup_wifi();
-  client.setServer(mqtt_server, 8359);
+  client.setServer(MQTT_HOST, 8359);
   client.setCallback(callback);
 }
 

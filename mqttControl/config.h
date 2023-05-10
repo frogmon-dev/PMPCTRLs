@@ -15,8 +15,8 @@
 
 const char*   MQTT_HOST       = "frogmon.synology.me"; // 원격컨트롤 서버 주소
 const int     MQTT_PORT       = 8359;                  // 원격컨트롤 서버 포트
-const char*   MQTT_USERID     = "등록한뚝딱이ID";         // 등록한뚝딱이ID
-const char*   MQTT_DEVICEID   = "등록한장비ID";          // 등록한장비ID
+const char*   MQTT_USERID     = "frogmon";         // 등록한뚝딱이ID
+const char*   MQTT_DEVICEID   = "pump01";          // 등록한장비ID
 const int     MQTT_RETRY_WAIT = 5000;
 const char*   MQTT_PUB        = "FARMs/Status/";      // 변경 불필요
 const char*   MQTT_SUB        = "FARMs/Control/";     // 뱐걍 븚필요
