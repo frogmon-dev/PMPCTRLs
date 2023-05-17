@@ -25,8 +25,8 @@ String getPubString(int remote, int stat) {
   // Create a DynamicJsonDocument
   DynamicJsonDocument doc(100);
   
-  doc["REMOTE"] = remote;
-  doc["PUMP"] = stat;  
+  doc["remote"] = remote;
+  doc["pump"] = stat;  
   
   // Serialize the document to a JSON string
   String jsonString;
