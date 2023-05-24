@@ -3,10 +3,6 @@
 #include <ArduinoJson.h>
 #include "config.h"
 
-// Update these with values suitable for your network.
-const char* ssid        = "frogmon";      //WIFI ID
-const char* password    = "1234567890";   //WIFI 비번
-
 String mPubAddr = String(MQTT_PUB) + String(MQTT_USERID)+"/"+String(MQTT_DEVICEID);
 String mSubAddr = String(MQTT_SUB) + String(MQTT_USERID)+"/"+String(MQTT_DEVICEID);
 
@@ -24,9 +20,11 @@ int value = 0;
 String getPubString(int remote, int stat) {
   // Create a DynamicJsonDocument
   DynamicJsonDocument doc(100);
+
+  String strStatus = stat == 1 ? "on" : "off";  
   
   doc["remote"] = remote;
-  doc["pump"] = stat;  
+  doc["pumps"] = strStatus;  
   
   // Serialize the document to a JSON string
   String jsonString;
@@ -70,16 +68,16 @@ void callback(char* topic, byte* payload, unsigned int length) {
       Serial.print("Failed to parse JSON: ");
       Serial.println(error.c_str());
     } else {
-      if (doc.containsKey("pump")) {
-        const char* pumpStatus = doc["pump"];
+      if (doc.containsKey("pumps")) {
+        const char* pumpStatus = doc["pumps"];
         if (strcmp(pumpStatus, "on") == 0) {
-          Serial.println("Pump is ON");
+          Serial.println("Pumps is ON");
           digitalWrite(WATER_PIN, HIGH);
           mRemote = 1;
           mPumpStat = 1;
           client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
         } else if (strcmp(pumpStatus, "off") == 0) {
-          Serial.println("Pump is OFF");          
+          Serial.println("Pumps is OFF");          
           digitalWrite(WATER_PIN, LOW);
           mRemote = 1;
           mPumpStat = 0;
@@ -163,12 +161,15 @@ void loop() {
   
   int switchState = digitalRead(SWITCH_PIN);
   if (lstSwitchState != switchState) {
+    Serial.print("Switch Status:");
+    Serial.println(switchState);
     lstSwitchState = switchState;
-    mRemote = 0;
-    mPumpStat = switchState;
-    if (mPumpStat == 0){
+    mRemote = 0;    
+    if (switchState == 0){
+      mPumpStat = 1;
       digitalWrite(WATER_PIN, HIGH);
     } else {
+      mPumpStat = 0;
       digitalWrite(WATER_PIN, LOW);
     }
     if (client.connected()) {
