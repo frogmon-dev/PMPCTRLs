@@ -24,7 +24,7 @@ String getPubString(int remote, int stat) {
   String strStatus = stat == 1 ? "on" : "off";  
   
   doc["remote"] = remote;
-  doc["pumps"] = strStatus;  
+  doc["pump"] = strStatus;  
   
   // Serialize the document to a JSON string
   String jsonString;
@@ -68,7 +68,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       Serial.print("Failed to parse JSON: ");
       Serial.println(error.c_str());
     } else {
-      if (doc.containsKey("pumps")) {
+      if (doc.containsKey("pump")) {
         const char* pumpStatus = doc["pumps"];
         if (strcmp(pumpStatus, "on") == 0) {
           Serial.println("Pumps is ON");
@@ -77,7 +77,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
           mPumpStat = 1;
           client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
         } else if (strcmp(pumpStatus, "off") == 0) {
-          Serial.println("Pumps is OFF");          
+          Serial.println("pump is OFF");          
           digitalWrite(WATER_PIN, LOW);
           mRemote = 1;
           mPumpStat = 0;
