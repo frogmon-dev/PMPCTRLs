@@ -69,7 +69,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
       Serial.println(error.c_str());
     } else {
       if (doc.containsKey("pump")) {
-        const char* pumpStatus = doc["pumps"];
+        const char* pumpStatus = doc["pump"];
         if (strcmp(pumpStatus, "on") == 0) {
           Serial.println("Pumps is ON");
           digitalWrite(WATER_PIN, HIGH);
