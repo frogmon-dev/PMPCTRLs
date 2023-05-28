@@ -1,3 +1,8 @@
+#define BUTTON_PIN  0
+#define BUILTIN_LED 2
+#define WATER_PIN   15
+#define SWITCH_PIN  13 
+
 #include <PubSubClient.h>
 #include <WiFi.h>
 #include <ArduinoJson.h>
@@ -107,8 +112,7 @@ void reconnect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
+    String clientId = String(MQTT_USERID) + "_" + String(MQTT_DEVICEID);
     // Attempt to connect
     if (client.connect(clientId.c_str())) {
       Serial.println("connected");
