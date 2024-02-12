@@ -72,51 +72,49 @@ void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print(topic);
   Serial.print("] ");
 
-  if (payload[0] == '{') {  
-    StaticJsonDocument<200> doc;
-    DeserializationError error = deserializeJson(doc, payload);
-    if (error) {
-      Serial.print("Failed to parse JSON: ");
-      Serial.println(error.c_str());
-    } else {
-      if (doc.containsKey("motor")) {
-        const char* Status = doc["motor"];
-        if (strcmp(Status, "stop") == 0) {
-          Serial.println("motor is STOP");
-          onStop();          
-          mRemote = 1;
-          mMotorStat = 1;
-          client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
-        } else if (strcmp(Status, "up") == 0) {
-          Serial.println("motor is up");          
-          onForward();
-          mRemote = 1;
-          mMotorStat = 0;
-          client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
-        } else if (strcmp(Status, "down") == 0) {
-          Serial.println("pump is OFF");          
-          onBackward();
-          mRemote = 1;
-          mMotorStat = 0;
-          client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
-        } else {
-          Serial.println("Invalid Motor status");
-        }
-      } else if (doc.containsKey("status")) {
-        int numStatus = doc["status"];
-        if (numStatus == 1) {
-          Serial.println("Status request");
-          client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
-        }
+  Serial.print("Received payload: ");
+  for (int i = 0; i < length; i++) {
+      Serial.print((char)payload[i]);
+  }
+  Serial.println(); 
+
+  StaticJsonDocument<200> doc;
+  DeserializationError error = deserializeJson(doc, payload);
+  if (error) {
+    Serial.print("Failed to parse JSON: ");
+    Serial.println(error.c_str());
+  } else {
+    if (doc.containsKey("motor")) {
+      const char* Status = doc["motor"];
+      if (strcmp(Status, "stop") == 0) {
+        Serial.println("motor is STOP");
+        onStop();          
+        mRemote = 1;
+        mMotorStat = 1;
+        client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
+      } else if (strcmp(Status, "up") == 0) {
+        Serial.println("motor is up");          
+        onForward();
+        mRemote = 1;
+        mMotorStat = 0;
+        client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
+      } else if (strcmp(Status, "down") == 0) {
+        Serial.println("pump is OFF");          
+        onBackward();
+        mRemote = 1;
+        mMotorStat = 0;
+        client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
+      } else {
+        Serial.println("Invalid Motor status");
+      }
+    } else if (doc.containsKey("status")) {
+      int numStatus = doc["status"];
+      if (numStatus == 1) {
+        Serial.println("Status request");
+        client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
       }
     }
-  } else {
-    // Print the received message as a string to the serial monitor
-    for (int i = 0; i < length; i++) {
-      Serial.print((char)payload[i]);      
-    }    
-    Serial.println();    
-  }  
+  }
 }
 
 void reconnect() {

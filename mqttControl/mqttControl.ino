@@ -14,6 +14,9 @@ String mSubAddr = String(MQTT_SUB) + String(MQTT_USERID)+"/"+String(MQTT_DEVICEI
 int  mRemote = 0;
 int  mPumpStat = 0;
 int  lstSwitchState;
+bool wifiConnected = false;
+unsigned long lastAttemptTime = 0;
+const long attemptInterval = 60000; 
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -40,7 +43,6 @@ String getPubString(int remote, int stat) {
 
 void setup_wifi() {
   delay(10);
-  // We start by connecting to a WiFi network
   Serial.println();
   Serial.print("Connecting to ");
   Serial.println(ssid);
@@ -48,63 +50,67 @@ void setup_wifi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
-  while (WiFi.status() != WL_CONNECTED) {
+  int attempts = 0;
+  while (WiFi.status() != WL_CONNECTED && attempts < 10) {
     delay(500);
     Serial.print(".");
+    attempts++;
   }
 
-  randomSeed(micros());
-
-  Serial.println("");
-  Serial.println("WiFi connected");
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
+  if(WiFi.status() == WL_CONNECTED) {
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+    wifiConnected = true; // 연결 성공
+  } else {
+    Serial.println("Failed to connect to WiFi. Please check your settings.");
+    wifiConnected = false; // 연결 실패
+  }
 }
+
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.print("Message arrived [");
   Serial.print(topic);
   Serial.print("] ");
+  
+  Serial.print("Received payload: ");
+  for (int i = 0; i < length; i++) {
+      Serial.print((char)payload[i]);
+  }
+  Serial.println(); 
 
-  if (payload[0] == '{') {  
-    StaticJsonDocument<200> doc;
-    DeserializationError error = deserializeJson(doc, payload);
-    if (error) {
-      Serial.print("Failed to parse JSON: ");
-      Serial.println(error.c_str());
-    } else {
-      if (doc.containsKey("pump")) {
-        const char* pumpStatus = doc["pump"];
-        if (strcmp(pumpStatus, "on") == 0) {
-          Serial.println("Pumps is ON");
-          digitalWrite(WATER_PIN, HIGH);
-          mRemote = 1;
-          mPumpStat = 1;
-          client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
-        } else if (strcmp(pumpStatus, "off") == 0) {
-          Serial.println("pump is OFF");          
-          digitalWrite(WATER_PIN, LOW);
-          mRemote = 1;
-          mPumpStat = 0;
-          client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
-        } else {
-          Serial.println("Invalid pump status");
-        }
-      } else if (doc.containsKey("status")) {
-        int numStatus = doc["status"];
-        if (numStatus == 1) {
-          Serial.println("Status request");
-          client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
-        }
+  StaticJsonDocument<200> doc;
+  DeserializationError error = deserializeJson(doc, payload);
+  if (error) {
+    Serial.print("Failed to parse JSON: ");
+    Serial.println(error.c_str());
+  } else {
+    if (doc.containsKey("pump")) {
+      const char* pumpStatus = doc["pump"];
+      if (strcmp(pumpStatus, "on") == 0) {
+        Serial.println("Pumps is ON");
+        digitalWrite(WATER_PIN, HIGH);
+        mRemote = 1;
+        mPumpStat = 1;
+        client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
+      } else if (strcmp(pumpStatus, "off") == 0) {
+        Serial.println("pump is OFF");          
+        digitalWrite(WATER_PIN, LOW);
+        mRemote = 1;
+        mPumpStat = 0;
+        client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
+      } else {
+        Serial.println("Invalid pump status");
+      }
+    } else if (doc.containsKey("status")) {
+      int numStatus = doc["status"];
+      if (numStatus == 1) {
+        Serial.println("Status request");
+        client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
       }
     }
-  } else {
-    // Print the received message as a string to the serial monitor
-    for (int i = 0; i < length; i++) {
-      Serial.print((char)payload[i]);      
-    }    
-    Serial.println();    
-  }  
+  }    
 }
 
 void reconnect() {
@@ -144,25 +150,8 @@ void setup() {
 }
 
 void loop() {
+  unsigned long currentMillis = millis();
 
-  if (!client.connected()) {
-    digitalWrite(BUILTIN_LED, LOW);
-    reconnect();
-  } else {    
-    digitalWrite(BUILTIN_LED, LOW);
-    delay(500);
-    digitalWrite(BUILTIN_LED, HIGH);
-    delay(500);
-  }
-  client.loop();
-
-  unsigned long now = millis();
-  if (now - lastMsg > 60000) {
-    lastMsg = now;
-    ++value;
-    client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
-  }
-  
   int switchState = digitalRead(SWITCH_PIN);
   if (lstSwitchState != switchState) {
     Serial.print("Switch Status:");
@@ -178,6 +167,33 @@ void loop() {
     }
     if (client.connected()) {
       client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());    
+    }
+  }
+
+  if (!wifiConnected || WiFi.status() != WL_CONNECTED) {
+    if (currentMillis - lastAttemptTime >= attemptInterval) {
+      Serial.println("Attempting to reconnect to WiFi...");
+      digitalWrite(BUILTIN_LED, HIGH);
+      setup_wifi();
+      digitalWrite(BUILTIN_LED, LOW);
+      lastAttemptTime = currentMillis;
+    }
+  } else {
+    if (!client.connected()) {
+      reconnect();
+    } else {
+      digitalWrite(BUILTIN_LED, LOW);
+      delay(500);
+      digitalWrite(BUILTIN_LED, HIGH);
+      delay(500);
+      client.loop();
+
+      unsigned long now = millis();
+      if (now - lastMsg > 60000) {
+        lastMsg = now;
+        ++value;
+        client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
+      }      
     }
   }
 }
