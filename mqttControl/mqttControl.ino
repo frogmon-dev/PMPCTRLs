@@ -1,7 +1,3 @@
-#define BUTTON_PIN  0
-#define BUILTIN_LED 2
-#define WATER_PIN   15
-#define SWITCH_PIN  13 
 
 #include <PubSubClient.h>
 #include <WiFi.h>
@@ -86,6 +82,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
           digitalWrite(WATER_PIN, LOW);
           mRemote = 1;
           mPumpStat = 0;
+          
           client.publish(mPubAddr.c_str(), getPubString(mRemote, mPumpStat).c_str());
         } else {
           Serial.println("Invalid pump status");
