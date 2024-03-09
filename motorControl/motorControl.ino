@@ -24,19 +24,18 @@ int value = 0;
 String getPubString(int remote, int stat) {
   // Create a DynamicJsonDocument
   DynamicJsonDocument doc(100);
-
-  String strStatus = stat == 1 ? "on" : "off";  
+  String strStatus = "stop";
   
-  if (stat == 0){
-    strStatus = "off";
-  } else if (stat == 1) {
+  if (stat == 1){
     strStatus = "up";
+  } else if (stat == 2) {
+    strStatus = "down";
   } else {
-    strStatus = "down";    
+    strStatus = "stop";    
   }
 
   doc["remote"] = remote;
-  doc["pump"] = strStatus;  
+  doc["motor"] = strStatus;  
   
   // Serialize the document to a JSON string
   String jsonString;
@@ -90,19 +89,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
         Serial.println("motor is STOP");
         onStop();          
         mRemote = 1;
-        mMotorStat = 1;
+        mMotorStat = 0;
         client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
       } else if (strcmp(Status, "up") == 0) {
         Serial.println("motor is up");          
         onForward();
         mRemote = 1;
-        mMotorStat = 0;
+        mMotorStat = 1;
         client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
       } else if (strcmp(Status, "down") == 0) {
-        Serial.println("pump is OFF");          
+        Serial.println("motor is down");          
         onBackward();
         mRemote = 1;
-        mMotorStat = 0;
+        mMotorStat = 2;
         client.publish(mPubAddr.c_str(), getPubString(mRemote, mMotorStat).c_str());
       } else {
         Serial.println("Invalid Motor status");
