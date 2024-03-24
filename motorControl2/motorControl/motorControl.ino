@@ -144,13 +144,13 @@ void onForward() {
 
 void onBackward() {
   digitalWrite(DIRECT_PIN, LOW);
-  digitalWrite(BREAK_PIN, LOW);
+  digitalWrite(BREAK_PIN, HIGH);
   Serial.println("Backward");
 }
 
 void onStop() {
   digitalWrite(DIRECT_PIN, LOW);
-  digitalWrite(BREAK_PIN, HIGH);
+  digitalWrite(BREAK_PIN, LOW);
   Serial.println("Stop");
 }
 
